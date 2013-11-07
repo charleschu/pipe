@@ -11,18 +11,36 @@ class Pipe
   def start
     loop do
       socket = @server.accept
-      data = socket.readpartial(1024)
-      p data
-
-      socket.write(response)
-      socket.close
+      connection = Connection.new(socket)
+      connection.process
     end
   end
 
-  def response
-    "HTTP/1.1 200 OK\r\n" +
-    "\r\n" +
-    "You are getting response"
+
+  class Connection
+    def initialize(socket)
+      @socket = socket
+    end
+
+    def process
+      data = @socket.readpartial(1024)
+      p data
+
+      send_response
+      close
+    end
+
+    def send_response
+      response = "HTTP/1.1 200 OK\r\n" +
+        "\r\n" +
+        "You are getting response"
+
+      @socket.write(response)
+    end
+
+    def close
+      @socket.close
+    end
   end
 end
 
