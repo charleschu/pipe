@@ -1,6 +1,7 @@
 #Test: in console, just curl localhost:3003/
 #You can get the response
 require 'socket'
+require 'debugger'
 
 class Pipe
   def initialize(port)
@@ -8,11 +9,14 @@ class Pipe
   end
 
   def start
-    socket = @server.accept
-    data = socket.readpartial(1024)
-    p data
+    loop do
+      socket = @server.accept
+      data = socket.readpartial(1024)
+      p data
 
-    socket.write(response)
+      socket.write(response)
+      socket.close
+    end
   end
 
   def response
