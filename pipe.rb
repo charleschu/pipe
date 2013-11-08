@@ -26,14 +26,18 @@ class Pipe
     end
 
     def process
-      data = @socket.readpartial(1024)
-      @parser << data
-      close
+      until @socket.closed? || @socket.eof?
+        data = @socket.readpartial(1024)
+        @parser << data
+      end
     end
 
     def on_message_complete
-      p @parser.http_method
+      puts "#{@parser.http_method} #{@parser.request_path}"
+      puts " " + "#{@parser.headers.inspect}"
+
       send_response
+      close
     end
 
     def send_response
