@@ -2,6 +2,8 @@
 #You can get the response
 require 'socket'
 require 'debugger'
+require 'http/parser'
+
 
 class Pipe
   def initialize(port)
@@ -20,14 +22,18 @@ class Pipe
   class Connection
     def initialize(socket)
       @socket = socket
+      @parser = Http::Parser.new(self)
     end
 
     def process
       data = @socket.readpartial(1024)
-      p data
-
-      send_response
+      @parser << data
       close
+    end
+
+    def on_message_complete
+      p @parser.http_method
+      send_response
     end
 
     def send_response
