@@ -4,6 +4,7 @@ require 'socket'
 require 'debugger'
 require 'http/parser'
 require 'stringio'
+require 'thread'
 
 
 class Pipe
@@ -12,11 +13,25 @@ class Pipe
     @app = app
   end
 
+  def prefork(workers)
+    puts "Master #{Process.pid}"
+    workers.times do
+      fork do
+        puts "Forked: #{Process.pid}"
+        start
+      end
+    end
+
+    Process.waitall
+  end
+
   def start
     loop do
       socket = @server.accept
-      connection = Connection.new(socket, @app)
-      connection.process
+      Thread.new do
+        connection = Connection.new(socket, @app)
+        connection.process
+      end
     end
   end
 
@@ -101,5 +116,5 @@ end
 app = Pipe::Builder.parse_file("config.ru")
 server = Pipe.new(3003, app)
 p "You have a server for 3003"
-server.start
+server.prefork 3
 

@@ -1,6 +1,8 @@
 class App
   def call(env)
-    message = "this is response from app\n"
+    sleep 5 if env["PATH_INFO"] == "/sleep"
+
+    message = "this is response from app, PID: #{Process.pid}\n"
     [
       200,
       {"Content-Type" => "text/plain", "Content-Length" => "#{message.size}"},
