@@ -51,11 +51,28 @@ class Pipe
       close
     end
 
+    REASONS = {
+      200 => "OK",
+      404 => "Not found"
+    }
+
     def send_response(env)
       status, header, body = @app.call(env)
-      response = "HTTP/1.1 #{status} OK\r\n" +
-        "\r\n" +
-        "#{body}\n"
+      reason = REASONS[status]
+
+      response = "HTTP/1.1 #{status} #{REASONS[status]}\r\n"
+
+      header.each do |k, v|
+        response += "#{k} : #{v}\r\n"
+      end
+
+      response += "\r\n"
+      #The rack application should return a body respond to each method
+      body.each do |chunk|
+        response += "#{chunk}"
+      end
+
+      body.close if body.respond_to? :close
 
       @socket.write(response)
     end
@@ -69,7 +86,7 @@ end
 
 class App
   def call(env)
-    message = "this is response from app"
+    message = "this is response from app\n"
     [
       200,
       {"Content-Type" => "text/plain", "Content-Length" => "#{message.size}"},
