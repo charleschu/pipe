@@ -82,20 +82,23 @@ class Pipe
     end
   end
 
-end
+  class Builder
+    attr_reader :app
+    def run(app)
+      @app = app
+    end
 
-class App
-  def call(env)
-    message = "this is response from app\n"
-    [
-      200,
-      {"Content-Type" => "text/plain", "Content-Length" => "#{message.size}"},
-      [message]
-    ]
+    def self.parse_file(file)
+      content = File.read(file)
+      builder = self.new
+      builder.instance_eval(content)
+      builder.app
+    end
   end
+
 end
 
-app = App.new
+app = Pipe::Builder.parse_file("config.ru")
 server = Pipe.new(3003, app)
 p "You have a server for 3003"
 server.start
